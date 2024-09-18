@@ -1,8 +1,10 @@
 package at.hannibal2.skyhanni.utils
 
+import at.hannibal2.skyhanni.skyhannimodule.SkyHanniModule
 import at.hannibal2.skyhanni.utils.LorenzUtils.enumJoinToPattern
 import at.hannibal2.skyhanni.utils.repopatterns.RepoPattern
 
+@SkyHanniModule
 object UtilsPatterns {
 
     private val patternGroup = RepoPattern.group("utils")
@@ -45,6 +47,16 @@ object UtilsPatterns {
     val enchantmentNamePattern by patternGroup.pattern(
         "item.neuitems.enchantmentname",
         "^(?<format>(?:§.)*)(?<name>[^§]+) (?<level>[IVXL]+)(?: Book)?$"
+    )
+
+    /**
+     * REGEX-TEST: duplex i
+     * REGEX-TEST: ultimate wise v
+     * REGEX-TEST: chimera 2
+     */
+    val cleanEnchantedNamePattern by patternGroup.pattern(
+        "item.enchantment.clean.name",
+        "(?i)(?<name>.*) (?<level>[IVXL]+|[0-9]+)"
     )
 
     val potionPattern by patternGroup.pattern(

@@ -17,6 +17,7 @@ import at.hannibal2.skyhanni.events.LorenzRenderWorldEvent
 import at.hannibal2.skyhanni.events.LorenzWorldChangeEvent
 import at.hannibal2.skyhanni.events.SecondPassedEvent
 import at.hannibal2.skyhanni.features.event.diana.DianaAPI.isDianaSpade
+import at.hannibal2.skyhanni.skyhannimodule.SkyHanniModule
 import at.hannibal2.skyhanni.utils.BlockUtils.getBlockAt
 import at.hannibal2.skyhanni.utils.BlockUtils.isInLoadedChunk
 import at.hannibal2.skyhanni.utils.ChatUtils
@@ -43,21 +44,21 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import org.lwjgl.input.Keyboard
 import kotlin.time.Duration.Companion.seconds
 
+@SkyHanniModule
 object GriffinBurrowHelper {
 
     private val config get() = SkyHanniMod.feature.event.diana
 
-    private val allowedBlocksAboveGround =
-        listOf(
-            Blocks.air,
-            Blocks.leaves,
-            Blocks.leaves2,
-            Blocks.tallgrass,
-            Blocks.double_plant,
-            Blocks.red_flower,
-            Blocks.yellow_flower,
-            Blocks.spruce_fence
-        )
+    private val allowedBlocksAboveGround = listOf(
+        Blocks.air,
+        Blocks.leaves,
+        Blocks.leaves2,
+        Blocks.tallgrass,
+        Blocks.double_plant,
+        Blocks.red_flower,
+        Blocks.yellow_flower,
+        Blocks.spruce_fence,
+    )
 
     var targetLocation: LorenzVec? = null
     private var guessLocation: LorenzVec? = null
@@ -132,7 +133,14 @@ object GriffinBurrowHelper {
             }
             locations.addAll(InquisitorWaypointShare.waypoints.values.map { it.location })
         }
-        targetLocation = locations.minByOrNull { it.distanceToPlayer() }
+        val newLocation = locations.minByOrNull { it.distanceToPlayer() }
+        if (targetLocation != newLocation) {
+            targetLocation = newLocation
+            // add island graphs here some day when the hub is fully added in the graph
+//             newLocation?.let {
+//                 IslandGraphs.find(it)
+//             }
+        }
 
         if (config.burrowNearestWarp) {
             targetLocation?.let {
@@ -378,8 +386,8 @@ object GriffinBurrowHelper {
 
         val text = "§bWarp to " + warp.displayName
         val keybindSuffix = if (config.keyBindWarp != Keyboard.KEY_NONE) {
-            val keyname = KeyboardManager.getKeyName(config.keyBindWarp)
-            " §7(§ePress $keyname§7)"
+            val keyName = KeyboardManager.getKeyName(config.keyBindWarp)
+            " §7(§ePress $keyName§7)"
         } else ""
         if (lastTitleSentTime.passedSince() > 2.seconds) {
             lastTitleSentTime = SimpleTimeMark.now()
@@ -399,7 +407,7 @@ object GriffinBurrowHelper {
             if (currentMayor != Mayor.DIANA) {
                 ChatUtils.chatAndOpenConfig(
                     "§cSelect Diana as mayor overwrite!",
-                    SkyHanniMod.feature.dev.debug::assumeMayor
+                    SkyHanniMod.feature.dev.debug::assumeMayor,
                 )
 
             } else {

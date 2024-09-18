@@ -5,6 +5,7 @@ import at.hannibal2.skyhanni.events.LorenzChatEvent
 import at.hannibal2.skyhanni.events.LorenzRenderWorldEvent
 import at.hannibal2.skyhanni.features.garden.pests.SprayType
 import at.hannibal2.skyhanni.features.misc.LockMouseLook
+import at.hannibal2.skyhanni.skyhannimodule.SkyHanniModule
 import at.hannibal2.skyhanni.utils.HypixelCommands
 import at.hannibal2.skyhanni.utils.ItemUtils.getLore
 import at.hannibal2.skyhanni.utils.ItemUtils.name
@@ -23,6 +24,7 @@ import kotlin.math.floor
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
+@SkyHanniModule
 object GardenPlotAPI {
 
     private val patternGroup = RepoPattern.group("garden.plot")
@@ -70,9 +72,14 @@ object GardenPlotAPI {
         "spray.target",
         "§a§lSPRAYONATOR! §r§7You sprayed §r§aPlot §r§7- §r§b(?<plot>.*) §r§7with §r§a(?<spray>.*)§r§7!"
     )
+
+    /**
+     * REGEX-TEST: §9§lSPLASH! §r§6Your §r§aGarden §r§6was cleared of all active §r§aSprayonator §r§6effects!
+     * REGEX-TEST: §9§lSPLASH! §r§6Your §r§bGarden §r§6was cleared of all active §r§aSprayonator §r§6effects!
+     */
     private val portableWasherPattern by patternGroup.pattern(
         "spray.cleared.portablewasher",
-        "§9§lSPLASH! §r§6Your §r§bGarden §r§6was cleared of all active §r§aSprayonator §r§6effects!"
+        "§9§lSPLASH! §r§6Your §r§[ba]Garden §r§6was cleared of all active §r§aSprayonator §r§6effects!"
     )
 
     var plots = listOf<Plot>()
@@ -358,12 +365,12 @@ object GardenPlotAPI {
 
         // Render horizontal
         val buildLimit = minHeight + 11
-        val ints = if (showBuildLimit) {
+        val iterable = if (showBuildLimit) {
             (minHeight..maxHeight step 4) + buildLimit
         } else {
             minHeight..maxHeight step 4
         }
-        for (y in ints) {
+        for (y in iterable) {
             val start = LorenzVec(chunkMinX, y, chunkMinZ)
             val isRedLine = y == buildLimit
             val color = if (isRedLine) Color.red else lineColor
