@@ -10,8 +10,8 @@ import at.hannibal2.skyhanni.features.misc.items.EstimatedItemValue
 import at.hannibal2.skyhanni.test.command.ErrorManager
 import at.hannibal2.skyhanni.utils.ChatUtils
 import at.hannibal2.skyhanni.utils.CollectionUtils
+import at.hannibal2.skyhanni.utils.ItemPriceUtils.getPrice
 import at.hannibal2.skyhanni.utils.NEUInternalName
-import at.hannibal2.skyhanni.utils.NEUItems.getPrice
 import at.hannibal2.skyhanni.utils.RenderUtils.renderRenderables
 import at.hannibal2.skyhanni.utils.SimpleTimeMark
 import at.hannibal2.skyhanni.utils.renderables.Renderable
@@ -88,7 +88,7 @@ open class SkyHanniTracker<Data : TrackerData>(
                 val data = it.get(getDisplayMode())
                 val searchables = drawDisplay(data)
                 buildFinalDisplay(searchables.buildSearchBox(textInput))
-            } ?: emptyList()
+            }.orEmpty()
             dirty = false
         }
 
@@ -104,9 +104,9 @@ open class SkyHanniTracker<Data : TrackerData>(
         if (isEmpty()) return@buildList
         if (inventoryOpen) {
             add(buildDisplayModeView())
-        }
-        if (inventoryOpen && getDisplayMode() == DisplayMode.SESSION) {
-            add(buildSessionResetButton())
+            if (getDisplayMode() == DisplayMode.SESSION) {
+                add(buildSessionResetButton())
+            }
         }
     }
 
@@ -198,7 +198,6 @@ open class SkyHanniTracker<Data : TrackerData>(
         TOTAL("Total"),
         SESSION("This Session"),
         MAYOR("This Mayor"),
-        ;
     }
 
     enum class DefaultDisplayMode(val display: String, val mode: DisplayMode?) {

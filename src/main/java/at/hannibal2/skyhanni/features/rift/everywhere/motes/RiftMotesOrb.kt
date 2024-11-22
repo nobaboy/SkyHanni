@@ -9,8 +9,8 @@ import at.hannibal2.skyhanni.skyhannimodule.SkyHanniModule
 import at.hannibal2.skyhanni.utils.CollectionUtils.editCopy
 import at.hannibal2.skyhanni.utils.LocationUtils.distanceToPlayer
 import at.hannibal2.skyhanni.utils.LorenzColor
-import at.hannibal2.skyhanni.utils.LorenzUtils.round
 import at.hannibal2.skyhanni.utils.LorenzVec
+import at.hannibal2.skyhanni.utils.NumberUtil.roundTo
 import at.hannibal2.skyhanni.utils.RegexUtils.matchMatcher
 import at.hannibal2.skyhanni.utils.RenderUtils.drawDynamicText
 import at.hannibal2.skyhanni.utils.RenderUtils.drawWaypointFilled
@@ -23,9 +23,13 @@ object RiftMotesOrb {
 
     private val config get() = RiftAPI.config.motesOrbs
 
+    /**
+     * REGEX-TEST: §5§lORB! §r§dPicked up §r§5+10 Motes§r§d!
+     * REGEX-TEST: §5§lORB! §r§dPicked up §r§5+25 Motes§r§d, recovered §r§a+2ф Rift Time§r§d!
+     */
     private val motesPattern by RepoPattern.pattern(
         "rift.everywhere.motesorb",
-        "§5§lORB! §r§dPicked up §r§5+.* Motes§r§d.*"
+        "§5§lORB! §r§dPicked up §r§5+.* Motes§r§d.*",
     )
 
     private var motesOrbs = emptyList<MotesOrb>()
@@ -79,7 +83,7 @@ object RiftMotesOrb {
             val ageInSeconds = (System.currentTimeMillis() - orb.startTime).toDouble() / 1000
             if (ageInSeconds < 0.5) continue
 
-            val particlesPerSecond = (orb.counter.toDouble() / ageInSeconds).round(1)
+            val particlesPerSecond = (orb.counter.toDouble() / ageInSeconds).roundTo(1)
             if (particlesPerSecond < 60 || particlesPerSecond > 90) continue
             orb.isOrb = true
 
@@ -87,7 +91,7 @@ object RiftMotesOrb {
                 orb.pickedUp = true
             }
 
-            val location = orb.location.add(y = 0.5)
+            val location = orb.location.up(0.5)
             val sizeOffset = (5 - config.size) * -0.1
             val color = if (orb.pickedUp) LorenzColor.GRAY else LorenzColor.LIGHT_PURPLE
             val text = color.getChatColor() + "Motes Orb"

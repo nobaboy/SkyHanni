@@ -8,10 +8,10 @@ import at.hannibal2.skyhanni.events.render.gui.ReplaceItemEvent
 import at.hannibal2.skyhanni.features.garden.GardenAPI
 import at.hannibal2.skyhanni.skyhannimodule.SkyHanniModule
 import at.hannibal2.skyhanni.utils.ChatUtils
+import at.hannibal2.skyhanni.utils.ItemUtils.editItemInfo
 import at.hannibal2.skyhanni.utils.ItemUtils.getInternalName
 import at.hannibal2.skyhanni.utils.ItemUtils.getLore
 import at.hannibal2.skyhanni.utils.NEUItems.getItemStack
-import io.github.moulberry.notenoughupdates.util.Utils
 import net.minecraft.client.player.inventory.ContainerLocalMenu
 import net.minecraft.init.Items
 import net.minecraft.item.ItemStack
@@ -29,8 +29,8 @@ object GardenPlotIcon {
     // TODO replace with enum
     private var editMode = 0 // 0 = off, 1 = on, 2 = reset
     private var lastClickedSlotId = -1
-    private var originalStack = mutableMapOf<Int, ItemStack>()
-    private var cachedStack = mutableMapOf<Int, ItemStack>()
+    private val originalStack = mutableMapOf<Int, ItemStack>()
+    private val cachedStack = mutableMapOf<Int, ItemStack>()
     private val editStack = ItemStack(Items.wooden_axe)
     private val whitelistedSlot =
         listOf(2, 3, 4, 5, 6, 11, 12, 13, 14, 15, 20, 21, 23, 24, 29, 30, 31, 32, 33, 38, 39, 40, 41, 42)
@@ -51,7 +51,7 @@ object GardenPlotIcon {
         for ((index, internalName) in plotList) {
             val old = originalStack[index]!!
             val new = internalName.getItemStack()
-            cachedStack[index] = Utils.editItemStackInfo(new, old.displayName, true, *old.getLore().toTypedArray())
+            cachedStack[index] = new.editItemInfo(old.displayName, true, old.getLore())
         }
     }
 

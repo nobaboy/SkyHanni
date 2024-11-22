@@ -6,15 +6,15 @@ import at.hannibal2.skyhanni.events.InventoryOpenEvent
 import at.hannibal2.skyhanni.events.LorenzToolTipEvent
 import at.hannibal2.skyhanni.events.render.gui.ReplaceItemEvent
 import at.hannibal2.skyhanni.skyhannimodule.SkyHanniModule
+import at.hannibal2.skyhanni.utils.ItemUtils
 import at.hannibal2.skyhanni.utils.LorenzUtils
-import at.hannibal2.skyhanni.utils.LorenzUtils.round
-import at.hannibal2.skyhanni.utils.NEUInternalName.Companion.asInternalName
+import at.hannibal2.skyhanni.utils.NEUInternalName.Companion.toInternalName
 import at.hannibal2.skyhanni.utils.NEUItems.getItemStack
 import at.hannibal2.skyhanni.utils.NumberUtil.addSeparators
+import at.hannibal2.skyhanni.utils.NumberUtil.roundTo
 import at.hannibal2.skyhanni.utils.RegexUtils.matches
 import at.hannibal2.skyhanni.utils.SimpleTimeMark
 import at.hannibal2.skyhanni.utils.repopatterns.RepoPattern
-import io.github.moulberry.notenoughupdates.util.Utils
 import net.minecraft.client.player.inventory.ContainerLocalMenu
 import net.minecraft.item.ItemStack
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
@@ -25,13 +25,21 @@ object LimboPlaytime {
     private lateinit var modifiedList: MutableList<String>
     private var setMinutes = false
     private val patternGroup = RepoPattern.group("misc.limbo.tooltip")
+
+    /**
+     * REGEX-TEST: §5§o§a10,032.8 minutes
+     */
     private val minutesPattern by patternGroup.pattern(
         "minutes",
-        "§5§o§a([\\d.,]+) minutes.+\$"
+        "§5§o§a(?<minutes>[\\d.,])+ minutes.*$"
     )
+
+    /**
+     * REGEX-TEST: §5§o§b1,000.4 hours
+     */
     private val hoursPattern by patternGroup.pattern(
         "hours",
-        "§5§o§b([\\d.,]+) hours.+\$"
+        "§5§o§b(?<hours>[\\d.,])+ hours.*$"
     )
 
     var tooltipPlaytime = mutableListOf<String>()
@@ -42,8 +50,8 @@ object LimboPlaytime {
     private val storage get() = ProfileStorageData.playerSpecific?.limbo
     private val enabled get() = SkyHanniMod.feature.misc.showLimboTimeInPlaytimeDetailed
 
-    private val itemID = "ENDER_PEARL".asInternalName()
-    private val itemName = "§aLimbo"
+    private val itemID = "ENDER_PEARL".toInternalName()
+    private const val ITEM_NAME = "§aLimbo"
     private lateinit var limboItem: ItemStack
     private var lastCreateCooldown = SimpleTimeMark.farPast()
 
@@ -58,9 +66,9 @@ object LimboPlaytime {
 
         if (lastCreateCooldown.passedSince() > 3.seconds) {
             lastCreateCooldown = SimpleTimeMark.now()
-            limboItem = Utils.createItemStack(
+            limboItem = ItemUtils.createItemStack(
                 itemID.getItemStack().item,
-                itemName,
+                ITEM_NAME,
                 *createItemLore()
             )
         }
@@ -105,7 +113,7 @@ object LimboPlaytime {
         if ((wholeMinutes % 60) == 0) {
             hoursString = "$wholeHours"
         } else {
-            val minutes: Float = ((wholeMinutes - wholeHours * 60).toFloat() / 60).round(1)
+            val minutes: Float = ((wholeMinutes - wholeHours * 60).toFloat() / 60).roundTo(1)
             hoursString = wholeHours.addSeparators()
             if (findFloatDecimalPlace(minutes) != 0) {
                 val minutesString = minutes.toString()
@@ -122,7 +130,7 @@ object LimboPlaytime {
             modifiedList = modifiedList.sortedByDescending {
                 val matcher = hoursPattern.matcher(it)
                 if (matcher.find()) {
-                    matcher.group(1).replace(",", "").toDoubleOrNull() ?: 0.0
+                    matcher.group("hours").replace(",", "").toDoubleOrNull() ?: 0.0
                 } else 0.0
             }.toMutableList()
             setMinutes = false
@@ -133,7 +141,7 @@ object LimboPlaytime {
             modifiedList = modifiedList.sortedByDescending {
                 val matcher = minutesPattern.matcher(it)
                 if (matcher.find()) {
-                    matcher.group(1).toDoubleOrNull() ?: 0.0
+                    matcher.group("minutes").toDoubleOrNull() ?: 0.0
                 } else 0.0
             }.toMutableList()
             setMinutes = true

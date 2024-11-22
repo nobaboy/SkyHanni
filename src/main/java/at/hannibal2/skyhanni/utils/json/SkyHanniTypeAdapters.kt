@@ -8,7 +8,7 @@ import at.hannibal2.skyhanni.features.garden.pests.PestType
 import at.hannibal2.skyhanni.utils.LorenzRarity
 import at.hannibal2.skyhanni.utils.LorenzVec
 import at.hannibal2.skyhanni.utils.NEUInternalName
-import at.hannibal2.skyhanni.utils.NEUInternalName.Companion.asInternalName
+import at.hannibal2.skyhanni.utils.NEUInternalName.Companion.toInternalName
 import at.hannibal2.skyhanni.utils.NEUItems
 import at.hannibal2.skyhanni.utils.SimpleTimeMark
 import at.hannibal2.skyhanni.utils.SimpleTimeMark.Companion.asTimeMark
@@ -20,6 +20,8 @@ import com.google.gson.stream.JsonWriter
 import net.minecraft.item.ItemStack
 import java.time.LocalDate
 import java.util.UUID
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 object SkyHanniTypeAdapters {
 
@@ -32,7 +34,7 @@ object SkyHanniTypeAdapters {
 
     val INTERNAL_NAME: TypeAdapter<NEUInternalName> = SimpleStringTypeAdapter(
         { this.asString() },
-        { this.asInternalName() },
+        { this.toInternalName() },
     )
 
     val VEC_STRING: TypeAdapter<LorenzVec> = SimpleStringTypeAdapter(
@@ -55,6 +57,16 @@ object SkyHanniTypeAdapters {
         }
     }
 
+    val DURATION: TypeAdapter<Duration> = object : TypeAdapter<Duration>() {
+        override fun write(out: JsonWriter, value: Duration) {
+            out.value(value.inWholeMilliseconds)
+        }
+
+        override fun read(reader: JsonReader): Duration {
+            return reader.nextString().toLong().milliseconds
+        }
+    }
+
     val CROP_TYPE: TypeAdapter<CropType> = SimpleStringTypeAdapter(
         { name },
         { CropType.getByName(this) },
@@ -67,7 +79,7 @@ object SkyHanniTypeAdapters {
 
     val SKYBLOCK_STAT: TypeAdapter<SkyblockStat> = SimpleStringTypeAdapter(
         { name.lowercase() },
-        { SkyblockStat.valueOf(this.uppercase()) },
+        { SkyblockStat.getValue(this.uppercase()) },
     )
 
     val TRACKER_DISPLAY_MODE = SimpleStringTypeAdapter.forEnum<SkyHanniTracker.DefaultDisplayMode>()
@@ -84,9 +96,7 @@ object SkyHanniTypeAdapters {
         }
     }
 
-    inline
-
-    fun <reified T> GsonBuilder.registerTypeAdapter(
+    inline fun <reified T> GsonBuilder.registerTypeAdapter(
         crossinline write: (JsonWriter, T) -> Unit,
         crossinline read: (JsonReader) -> T,
     ): GsonBuilder {
