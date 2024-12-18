@@ -1,12 +1,13 @@
 package at.hannibal2.skyhanni.features.event.hoppity
 
+import at.hannibal2.skyhanni.api.event.HandleEvent
 import at.hannibal2.skyhanni.data.PurseAPI
 import at.hannibal2.skyhanni.events.ConfigLoadEvent
 import at.hannibal2.skyhanni.events.GuiRenderEvent
 import at.hannibal2.skyhanni.events.LorenzChatEvent
-import at.hannibal2.skyhanni.events.LorenzKeyPressEvent
 import at.hannibal2.skyhanni.events.MessageSendToServerEvent
 import at.hannibal2.skyhanni.events.SecondPassedEvent
+import at.hannibal2.skyhanni.events.minecraft.KeyPressEvent
 import at.hannibal2.skyhanni.features.inventory.chocolatefactory.ChocolateFactoryAPI
 import at.hannibal2.skyhanni.skyhannimodule.SkyHanniModule
 import at.hannibal2.skyhanni.utils.ChatUtils
@@ -63,14 +64,6 @@ object HoppityCallWarning {
         "§e\\[NPC] §aHoppity§f: §b✆ §f§rWhat's up, .*§f\\?",
     )
 
-    /**
-     * REGEX-TEST: /selectnpcoption hoppity r_2_1
-     */
-    private val pickupOutgoingCommandPattern by ChocolateFactoryAPI.patternGroup.pattern(
-        "hoppity.call.pickup.outgoing",
-        "\\/selectnpcoption hoppity r_2_1",
-    )
-
     private val config get() = HoppityEggsManager.config.hoppityCallWarning
     private var warningSound = SoundUtils.createSound("note.pling", 1f)
     private var activeWarning = false
@@ -80,8 +73,8 @@ object HoppityCallWarning {
     private var acceptUUID: String? = null
     private var commandSentTimer = SimpleTimeMark.farPast()
 
-    @SubscribeEvent
-    fun onKeyPress(event: LorenzKeyPressEvent) {
+    @HandleEvent
+    fun onKeyPress(event: KeyPressEvent) {
         if (config.acceptHotkey == Keyboard.KEY_NONE || config.acceptHotkey != event.keyCode) return
         acceptUUID?.let {
             HypixelCommands.callback(acceptUUID!!)
@@ -89,7 +82,7 @@ object HoppityCallWarning {
         }
     }
 
-    @SubscribeEvent
+    @HandleEvent
     fun onConfigLoad(event: ConfigLoadEvent) {
         val soundProperty = config.hoppityCallSound
         ConditionalUtils.onToggle(soundProperty) {
@@ -141,11 +134,11 @@ object HoppityCallWarning {
         GlStateManager.color(1F, 1F, 1F, 1F)
     }
 
-    @SubscribeEvent
+    @HandleEvent
     fun onCommandSend(event: MessageSendToServerEvent) {
-        if (!LorenzUtils.inSkyBlock || !config.ensureCoins) return
-        if (!pickupOutgoingCommandPattern.matches(event.message)) return
-        if (commandSentTimer.passedSince() < 5.seconds) return
+        if (!LorenzUtils.inSkyBlock) return
+        if (!HoppityAPI.pickupOutgoingCommandPattern.matches(event.message)) return
+        if (!config.ensureCoins || commandSentTimer.passedSince() < 5.seconds) return
         if (PurseAPI.getPurse() >= config.coinThreshold) return
 
         commandSentTimer = SimpleTimeMark.now()

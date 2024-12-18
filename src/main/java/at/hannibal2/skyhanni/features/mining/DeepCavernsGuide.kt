@@ -1,6 +1,7 @@
 package at.hannibal2.skyhanni.features.mining
 
 import at.hannibal2.skyhanni.SkyHanniMod
+import at.hannibal2.skyhanni.api.event.HandleEvent
 import at.hannibal2.skyhanni.config.ConfigUpdaterMigrator
 import at.hannibal2.skyhanni.data.IslandType
 import at.hannibal2.skyhanni.data.jsonobjects.repo.ParkourJson
@@ -57,7 +58,7 @@ object DeepCavernsGuide {
         "§e\\[NPC] §bLift Operator§f: §rVenture down into the Lapis Quarry to unlock my Lift Menu!",
     )
 
-    @SubscribeEvent
+    @HandleEvent
     fun onIslandChange(event: IslandChangeEvent) {
         parkourHelper?.reset()
         show = false
@@ -79,7 +80,7 @@ object DeepCavernsGuide {
         updateConfig()
     }
 
-    @SubscribeEvent
+    @HandleEvent
     fun onConfigLoad(event: ConfigLoadEvent) {
         ConditionalUtils.onToggle(config.rainbowColor, config.monochromeColor, config.lookAhead) {
             updateConfig()
@@ -142,7 +143,7 @@ object DeepCavernsGuide {
         showStartIcon = false
     }
 
-    @SubscribeEvent
+    @HandleEvent
     fun replaceItem(event: ReplaceItemEvent) {
         if (show) return
         if (event.inventory is ContainerLocalMenu && showStartIcon && event.slot == 49) {
@@ -169,7 +170,7 @@ object DeepCavernsGuide {
 
     fun isEnabled() = IslandType.DEEP_CAVERNS.isInIsland() && config.enabled
 
-    @SubscribeEvent
+    @HandleEvent
     fun onConfigFix(event: ConfigUpdaterMigrator.ConfigFixEvent) {
         event.move(38, "mining.deepCavernsParkour", "mining.deepCavernsGuide")
     }
